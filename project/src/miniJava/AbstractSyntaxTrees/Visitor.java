@@ -52,6 +52,7 @@ public interface Visitor<ArgType,ResultType> {
     public ResultType visitQRef(QualRef ref, ArgType arg);
 
   // Terminals
+    public ResultType visitNullLiteral(NullLiteral nl, ArgType arg);
     public ResultType visitIdentifier(Identifier id, ArgType arg);
     public ResultType visitOperator(Operator op, ArgType arg);
     public ResultType visitIntLiteral(IntLiteral num, ArgType arg);

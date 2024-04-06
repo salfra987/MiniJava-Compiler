@@ -344,7 +344,11 @@ public class ASTDisplay implements Visitor<String,Object> {
 	// TERMINALS
 	//
 	///////////////////////////////////////////////////////////////////////////////
-    
+    public Object visitNullLiteral(NullLiteral nl, String arg){
+        show(arg, quote(nl.spelling) + " " + nl.toString());
+        return null;
+    } 
+
     public Object visitIdentifier(Identifier id, String arg){
         show(arg, quote(id.spelling) + " " + id.toString());
         return null;

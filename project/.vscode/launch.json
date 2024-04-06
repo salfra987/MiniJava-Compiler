@@ -1,0 +1,232 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Compiler",
+            "request": "launch",
+            "mainClass": "miniJava.Compiler",
+            "projectName": "pa1",
+            "args": "fail322.java"
+        },
+        {
+            "type": "java",
+            "name": "Fail317",
+            "request": "launch",
+            "mainClass": "miniJava.Fail317",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Fail322",
+            "request": "launch",
+            "mainClass": "miniJava.Fail322",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Fail323",
+            "request": "launch",
+            "mainClass": "miniJava.Fail323",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Fail324",
+            "request": "launch",
+            "mainClass": "miniJava.Fail324",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Fail325",
+            "request": "launch",
+            "mainClass": "miniJava.Fail325",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Fail326",
+            "request": "launch",
+            "mainClass": "miniJava.Fail326",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Fail328",
+            "request": "launch",
+            "mainClass": "miniJava.Fail328",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Fail329",
+            "request": "launch",
+            "mainClass": "miniJava.Fail329",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Foiled",
+            "request": "launch",
+            "mainClass": "miniJava.Foiled",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass301",
+            "request": "launch",
+            "mainClass": "miniJava.Pass301",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass304",
+            "request": "launch",
+            "mainClass": "miniJava.Pass304",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass305",
+            "request": "launch",
+            "mainClass": "miniJava.Pass305",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass308",
+            "request": "launch",
+            "mainClass": "miniJava.Pass308",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass309",
+            "request": "launch",
+            "mainClass": "miniJava.Pass309",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass310",
+            "request": "launch",
+            "mainClass": "miniJava.Pass310",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass311",
+            "request": "launch",
+            "mainClass": "miniJava.Pass311",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass312",
+            "request": "launch",
+            "mainClass": "miniJava.Pass312",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass321",
+            "request": "launch",
+            "mainClass": "miniJava.Pass321",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass322",
+            "request": "launch",
+            "mainClass": "miniJava.Pass322",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass323",
+            "request": "launch",
+            "mainClass": "miniJava.Pass323",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass324",
+            "request": "launch",
+            "mainClass": "miniJava.Pass324",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass328",
+            "request": "launch",
+            "mainClass": "miniJava.Pass328",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass330",
+            "request": "launch",
+            "mainClass": "miniJava.Pass330",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "Pass337",
+            "request": "launch",
+            "mainClass": "miniJava.Pass337",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "fail309",
+            "request": "launch",
+            "mainClass": "miniJava.fail309",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "fail310",
+            "request": "launch",
+            "mainClass": "miniJava.fail310",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "fail312",
+            "request": "launch",
+            "mainClass": "miniJava.fail312",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "fail313",
+            "request": "launch",
+            "mainClass": "miniJava.fail313",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "fail330",
+            "request": "launch",
+            "mainClass": "miniJava.fail330",
+            "projectName": "pa1"
+        },
+        {
+            "type": "java",
+            "name": "fail335",
+            "request": "launch",
+            "mainClass": "miniJava.fail335",
+            "projectName": "pa1"
+        }
+    ]
+}

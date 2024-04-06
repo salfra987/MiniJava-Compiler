@@ -1,5 +1,6 @@
 package miniJava;
 
+import java.lang.System;
 import java.util.List;
 import java.util.ArrayList;
 

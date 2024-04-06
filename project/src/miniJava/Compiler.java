@@ -1,7 +1,13 @@
 package miniJava;
 
 import java.io.FileInputStream;
+import java.lang.System;
+
 import miniJava.AbstractSyntaxTrees.*;
+import miniJava.AbstractSyntaxTrees.Package;
+import miniJava.ContextualAnalysis.Identification;
+import miniJava.ContextualAnalysis.TypeChecking;
+
 import java.io.FileNotFoundException;
 
 import miniJava.SyntacticAnalyzer.Scanner;
@@ -26,7 +32,7 @@ public class Compiler {
 		try {
 			inputStream = new FileInputStream(args[0]);
 		} catch (FileNotFoundException e) {
-			System.out.println("No such file " + args[0] + "exists");
+			System.out.println("No such file " + args[0] + " exists");
 			System.exit(1);
 		}
 		//System.out.println("we have a file");
@@ -51,9 +57,31 @@ public class Compiler {
 		}
 		
 		// TODO: If there are no errors, println("Success")
-		else {
-			ASTDisplay display = new ASTDisplay();
-			display.showTree(ast);
+		//else {
+		//	ASTDisplay display = new ASTDisplay();
+		//	display.showTree(ast);
+		//}
+
+		Identification id = new Identification((Package)ast, eReporter);
+		id.parse((Package)ast);
+		int x = 0;
+		
+		if(eReporter.hasErrors()){
+			System.out.println("Error");
+			eReporter.outputErrors();
+			x = 1;
+		}
+
+		TypeChecking tc = new TypeChecking(eReporter);
+		tc.parse((Package)ast);
+		
+		if(eReporter.hasErrors()){
+			System.out.println("Error");
+			eReporter.outputErrors();
+		}else{
+			if(x == 0){
+				System.out.println("Success");
+			}
 		}
 	}
 }

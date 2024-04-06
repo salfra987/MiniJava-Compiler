@@ -1,0 +1,5 @@
+Null literal
+
+Added classContained to MethodDecl
+
+Added declaration to Reference
