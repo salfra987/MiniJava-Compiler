@@ -33,12 +33,19 @@ public class IDTable {
 
     public static int addDeclaration(Declaration decl){
         for(int i = table.size() - 1; i >= 0; i--){
-            if(table.get(i).containsKey(decl.name) && (decl.toString().equals(table.get(i).get(decl.name).toString()) || isVarButAlsoAlreadyParam(decl, i))){
+            if(table.get(i).containsKey(decl.name) && (decl.toString().equals(table.get(i).get(decl.name).toString()) || isVarButAlsoAlreadyParam(decl, i) || isOtherMember(decl, i))){
                 return 0;
             }
         }
         table.peek().put(decl.name, decl);
         return 1;
+    }
+
+    private static boolean isOtherMember(Declaration decl, int i){
+        if(!table.get(i).get(decl.name).toString().equals("ParameterDecl")){
+            return true;
+        }
+        return false;
     }
 
     private static boolean isVarButAlsoAlreadyParam(Declaration decl, int i){
@@ -72,5 +79,23 @@ public class IDTable {
             }
         }
             return null;
+    }
+
+    public static boolean currentScopeContainsIfStatement() {
+        for (HashMap<String, Declaration> scope : table) {
+            for (Declaration decl : scope.values()) {
+                if (decl instanceof MethodDecl) {
+                    MethodDecl methodDecl = (MethodDecl) decl;
+                    if (methodDecl.statementList != null) {
+                        for (Statement stmt : methodDecl.statementList) {
+                            if (stmt instanceof IfStmt) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

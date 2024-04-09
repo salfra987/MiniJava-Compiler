@@ -129,6 +129,9 @@ public class Identification implements Visitor<Object,Object> {
 
     public Object visitVarDecl(VarDecl vd, Object arg){
         vd.type.visit(this, null);
+        if(IDTable.currentScopeContainsIfStatement()) {
+            throw new IdentificationError(vd, "solitary variable declaration statement not permitted here");
+        }
         if(IDTable.addDeclaration(vd) == 0){
             throw new IdentificationError(vd, "This variable declaration already exists " + vd.name);
         };
