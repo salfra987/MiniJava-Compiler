@@ -55,8 +55,9 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 
     @Override
 	public TypeDenoter visitVarDecl(VarDecl decl, Object arg){
-		if(decl.type instanceof ClassType && ((ClassType)decl.type).className.spelling.equals("String"))
-			return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.ERROR, decl.posn);
+		if(decl.type instanceof ClassType && ((ClassType)decl.type).className.spelling.equals("String")){
+			reportTypeError(decl, "String is an unsupported type");
+			return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.UNSUPPORTED, decl.posn);}
 		else
 			return decl.type;
 	}
@@ -87,22 +88,73 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 	public TypeDenoter visitVardeclStmt(VarDeclStmt stmt, Object arg){
 		TypeDenoter declTD = (TypeDenoter)stmt.varDecl.visit(this, null);
 		TypeDenoter	expTD = (TypeDenoter)stmt.initExp.visit(this, null);
-		//System.out.println("hello");
+
+		if (!checkAssignmentCompatibility(declTD, expTD)) {
+			//System.out.println(declTD.toString() + " " + expTD.toString());
+			reportTypeError(stmt, "Incompatible types in assignment statement");
+		}
+		
 		checkTypeDenoter(stmt, declTD, expTD);
 		return null;
+	}
+
+	private boolean checkAssignmentCompatibility(TypeDenoter varType, TypeDenoter expType) {
+		// Check if the types are exactly the same
+		if (varType.equals(expType)) {
+			return true;
+		}
+		
+		// Check if both types are class types
+		if (varType instanceof ClassType && expType instanceof ClassType) {
+			ClassType varClassType = (ClassType) varType;
+			ClassType expClassType = (ClassType) expType;
+			
+			// Check if the classes are exactly the same
+			if (varClassType.className.spelling.equals(expClassType.className.spelling)) {
+				return true;
+			}
+		}
+		
+		if (varType instanceof ClassType && expType == null) {
+			// classtype and null type are compatible
+			return true;
+		} 
+		
+		if (varType instanceof BaseType && expType instanceof BaseType) {
+			BaseType varClassType = (BaseType) varType;
+			BaseType expClassType = (BaseType) expType;
+			
+			// Check if the basetypes are exactly the same
+			if (varClassType.typeKind.equals(expClassType.typeKind)) {
+				return true;
+			}
+		}
+		
+		if (varType instanceof ArrayType && varType instanceof ArrayType) {
+			ArrayType varClassType = (ArrayType) varType;
+			ArrayType expClassType = (ArrayType) expType;
+			
+			// Check if the ArrayTypes are exactly the same
+			if (varClassType.typeKind.equals(expClassType.typeKind)) {
+				return true;
+			}
+		}
+		
+		// If none of the above conditions are met, the types are incompatible
+		return false;
 	}
 
     @Override
 	public TypeDenoter visitAssignStmt(AssignStmt stmt, Object arg){
 		if(stmt.ref.declaration == null){
+			//System.out.println(stmt.ref);
 			_errors.reportError("Error in assignment statement ");
 			return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.ERROR, null);
 		}
-		if(stmt.ref.declaration.type instanceof BaseType || stmt.ref.declaration.type instanceof ClassType){
+		if(stmt.ref.declaration.type instanceof BaseType || stmt.ref.declaration.type instanceof ClassType || stmt.ref.declaration.type instanceof ArrayType){
 			TypeDenoter refTD = (TypeDenoter)stmt.ref.visit(this, null);
 			TypeDenoter expTD = (TypeDenoter)stmt.val.visit(this, null);
 			
-			//System.out.println("hello2");
 			checkTypeDenoter(stmt, refTD, expTD);
 		}else{
 			expectedBaseOrClassType(stmt.ref);
@@ -113,6 +165,9 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 
     @Override
 	public TypeDenoter visitIxAssignStmt(IxAssignStmt stmt, Object arg){
+		if(stmt.ref.declaration == null){
+			return null;
+		}
 		if(!(stmt.ref.declaration.type instanceof ArrayType)){
 			expectedArrayType(stmt.ref);
 			return null;
@@ -139,9 +194,15 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 				for(int i = 0; i < md.parameterDeclList.size(); i++){
 					Expression passedArg = stmt.argList.get(i);
 					ParameterDecl param = md.parameterDeclList.get(i);
-					
-					//System.out.println("hello4");
-					checkTypeDenoter(passedArg, (TypeDenoter)param.visit(this, null), (TypeDenoter)passedArg.visit(this, null));
+
+					TypeDenoter argType = passedArg.visit(this, null);
+					if(!(argType instanceof BaseType)){
+                	if ((((ClassType) argType).className.spelling).equals("String")) {
+                    	reportTypeError(passedArg, "Unsupported type: String");
+                	}}
+                
+                // Check the type compatibility of arguments
+                checkTypeDenoter(passedArg, (TypeDenoter) param.visit(this, null), (TypeDenoter) passedArg.visit(this, null));
 				}
 			}
 		}else{
@@ -156,8 +217,12 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 		MethodDecl md = (MethodDecl)arg;
 		
 		if(stmt.returnExpr != null) {
+			if (md.type.typeKind == miniJava.AbstractSyntaxTrees.TypeKind.VOID) {
+				reportTypeError(stmt, "Cannot return a value from a void method");
+				return null;
+			}
+
 			TypeDenoter rTD = (TypeDenoter)stmt.returnExpr.visit(this, null);
-			//System.out.println("hello5");
 			checkTypeDenoter(stmt.returnExpr, md.type, rTD);
 		}else
 			checkTypeKind(stmt, md.type.typeKind, miniJava.AbstractSyntaxTrees.TypeKind.VOID);
@@ -216,18 +281,18 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 		TypeDenoter right = (TypeDenoter)expr.right.visit(this, null);
 		
 		switch(expr.operator.spelling){
+			case "==":
+        	case "!=":
+            		if ((left instanceof ClassType || right instanceof ClassType) && !left.equals(right)) {
+                		reportTypeError(expr, "Cannot compare objects of different types using == or !=");
+            		}
+
 			case ">":
 			case "<":
 			case ">=":
 			case "<=":
-			case "!=":
 				checkTypeKind(expr.left, miniJava.AbstractSyntaxTrees.TypeKind.INT, left.typeKind);
 				checkTypeKind(expr.right, miniJava.AbstractSyntaxTrees.TypeKind.INT, right.typeKind);
-				return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.BOOLEAN, expr.posn);
-				
-			case "==":
-				//System.out.println("hello6");
-				checkTypeDenoter(expr, left, right);
 				return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.BOOLEAN, expr.posn);
 				
 			case "&&":
@@ -305,27 +370,33 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
 	public TypeDenoter visitNewObjectExpr(NewObjectExpr expr, Object arg){
 		if(!expr.classtype.className.spelling.equals("String"))
 			return expr.classtype;
-		else
-			return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.ERROR, expr.posn);
+		else{
+			reportTypeError(expr,"String is an UNSUPPORTED type");
+			return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.UNSUPPORTED, expr.posn);}
 	}
 
     @Override
 	public TypeDenoter visitNewArrayExpr(NewArrayExpr expr, Object arg){
-		//System.out.println("hello8");
 		checkTypeDenoter(expr.sizeExpr, new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.INT, null), (TypeDenoter)expr.sizeExpr.visit(this, null));
 		return new ArrayType(expr.eltType, expr.posn);
 	}
 
     @Override
 	public TypeDenoter visitThisRef(ThisRef ref, Object arg){
+		if(ref.declaration == null){
+			return null;
+		}
 		return ref.declaration.type;
 	}
 
     @Override
 	public TypeDenoter visitIdRef(IdRef ref, Object arg){
-		if(ref.declaration == null){
+		if(ref.declaration == null && !(ref.id.spelling.equals("null"))){
 			reportTypeError(ref, "Identifier not declared");
 			return new BaseType(miniJava.AbstractSyntaxTrees.TypeKind.ERROR, null);
+		}
+		if (ref.id.spelling.equals("null")){
+			return null;
 		}
 		return ref.declaration.type;
 	}
@@ -369,16 +440,17 @@ public class TypeChecking implements Visitor<Object, TypeDenoter> {
     private boolean checkTypeKind(AST ast, miniJava.AbstractSyntaxTrees.TypeKind wanted, miniJava.AbstractSyntaxTrees.TypeKind found){
 		if(wanted != found){
 			//System.out.println("hello10");
-			reportTypeError(ast, "Expected: " + wanted + ", instead found " + found);
+			reportTypeError(ast, "(CHECKTYPEKIND)Expected: " + wanted + ", instead found " + found);
 			return false;
 		}
 		return true;
 	}
 
     private void checkTypeDenoter(AST ast, TypeDenoter wanted, TypeDenoter found){
-		if(wanted.equals(found))
-		//System.out.println("hello9");
-			reportTypeError(ast, "Expected: " + wanted + ", instead found " + found);
+		if(!(wanted.equals(found)) && !(wanted instanceof ClassType && found == null)){
+			if(!(wanted.toString().equals(found.toString()))){
+			reportTypeError(ast, "(CHECKTYPEDENOTER)Expected: " + wanted + ", instead found " + found);}
+		}
 	}
 
     private void expectedMethod(int lineNum){

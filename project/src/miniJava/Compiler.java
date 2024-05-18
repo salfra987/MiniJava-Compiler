@@ -57,10 +57,10 @@ public class Compiler {
 		}
 		
 		// TODO: If there are no errors, println("Success")
-		//else {
-		//	ASTDisplay display = new ASTDisplay();
-		//	display.showTree(ast);
-		//}
+		// else {
+		// 	ASTDisplay display = new ASTDisplay();
+		// 	display.showTree(ast);
+		// }
 
 		Identification id = new Identification((Package)ast, eReporter);
 		id.parse((Package)ast);
@@ -68,6 +68,7 @@ public class Compiler {
 		
 		if(eReporter.hasErrors()){
 			System.out.println("Error");
+			//System.out.println("ident");
 			eReporter.outputErrors();
 			x = 1;
 		}
@@ -77,6 +78,7 @@ public class Compiler {
 		
 		if(eReporter.hasErrors()){
 			System.out.println("Error");
+			//System.out.println("type");
 			eReporter.outputErrors();
 		}else{
 			if(x == 0){

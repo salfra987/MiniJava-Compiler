@@ -70,7 +70,7 @@ public class Scanner {
 					}
 				}
 			} else {
-				nextChar();
+				//nextChar();
 				return new Token(OPERATOR, "/");
 			}
 		}

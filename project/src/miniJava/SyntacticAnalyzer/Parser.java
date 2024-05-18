@@ -463,7 +463,9 @@ public class Parser {
 		Operator op5;
 		while (_currentToken.getTokenText().equals("*") || _currentToken.getTokenText().equals("/")) {
 			op5 = new Operator(_currentToken);
+			//System.out.println(_currentToken.getTokenText());
 			accept(OPERATOR);
+			//System.out.println(_currentToken.getTokenText());
 			Expression e12 = parseUnary();
 			e11 = new BinaryExpr(op5, e11, e12, null);
 		}
@@ -490,10 +492,12 @@ public class Parser {
 				accept(RBRACKET);
 				return new IxExpr(r, e, null);
 			} else if(_currentToken.getTokenType() == LPAREN) {
+				accept(LPAREN);
 				ExprList el = new ExprList();
 				if(_currentToken.getTokenType() != RPAREN) {
 					el = parseArgumentList();
 				}
+				//System.out.println("hello");
 				accept(RPAREN);
 				return new CallExpr(r, el, null);
 			} else {
@@ -578,6 +582,10 @@ public class Parser {
 	// This method will accept the token and retrieve the next token.
 	//  Can be useful if you want to error check and accept all-in-one.
 	private void accept(TokenType expectedType) throws SyntaxError {
+		//System.out.println(_currentToken.getTokenText());
+		//System.out.println(expectedType);
+		//System.out.println(_currentToken.getTokenText());
+
 		if( _currentToken.getTokenType() == expectedType ) {
 			//System.out.println(_currentToken.getTokenType().toString() + _currentToken.getTokenText() + "\n");
 			_currentToken = _scanner.scan();
@@ -587,7 +595,7 @@ public class Parser {
 		
 		// TODO: Report an error here.
 		//  "Expected token X, but got Y"
-		_errors.reportError("Expected token " + expectedType + ", but got " + _currentToken.getTokenText());
+		_errors.reportError("Expected token " + expectedType + ", but got " + _currentToken.getTokenType());
 		throw new SyntaxError();
 	}
 }

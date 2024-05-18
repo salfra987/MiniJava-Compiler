@@ -1,5 +1,5 @@
-Null literal
+NullLiteral.java was added to the AbstrastSyntaxTrees directory.
 
-Added classContained to MethodDecl
+Added classContained field to MethodDecl, line 24.
 
-Added declaration to Reference
+Added declaration field to Reference, line 12.

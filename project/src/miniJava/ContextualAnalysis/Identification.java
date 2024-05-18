@@ -1,6 +1,10 @@
 package miniJava.ContextualAnalysis;
 
+import static miniJava.SyntacticAnalyzer.TokenType.ID;
+
 import java.lang.System;
+import java.lang.reflect.Method;
+
 import miniJava.ErrorReporter;
 import miniJava.AbstractSyntaxTrees.Package;
 import miniJava.SyntacticAnalyzer.Token;
@@ -129,7 +133,10 @@ public class Identification implements Visitor<Object,Object> {
 
     public Object visitVarDecl(VarDecl vd, Object arg){
         vd.type.visit(this, null);
-        if(IDTable.currentScopeContainsIfStatement()) {
+        int scopeNum = IDTable.findDeclarationsLocation() - 3;
+        //System.out.println(scopeNum);
+        if(IDTable.scopeContainsIfStatement(scopeNum) || IDTable.scopeContainsWhileStatement(scopeNum)) {
+            //System.out.println(vd.name);
             throw new IdentificationError(vd, "solitary variable declaration statement not permitted here");
         }
         if(IDTable.addDeclaration(vd) == 0){
@@ -175,6 +182,25 @@ public class Identification implements Visitor<Object,Object> {
 
     public Object visitVardeclStmt(VarDeclStmt vds, Object arg){
         MethodDecl md = (MethodDecl)arg;
+        if(vds.initExp instanceof BinaryExpr){
+            BinaryExpr binEx = ((BinaryExpr) vds.initExp);
+            if(binEx.left instanceof RefExpr && binEx.right instanceof RefExpr){if(((IdRef) ((RefExpr) binEx.left).ref).id.spelling.equals(vds.varDecl.name) || ((IdRef) ((RefExpr) binEx.right).ref).id.spelling.equals(vds.varDecl.name)){
+                throw new IdentificationError(vds, "This varDeclStmt references itself while being initialized");
+            }}
+        }
+
+        if(vds.initExp instanceof RefExpr){
+            RefExpr myExpr = ((RefExpr) vds.initExp);
+            if(myExpr.ref instanceof IdRef){
+                IdRef myID = ((IdRef) myExpr.ref);
+                if(IDTable.findDeclaration(myID.id) != null){
+                    if(!(IDTable.findDeclaration(myID.id) instanceof VarDecl) && !(IDTable.findDeclaration(myID.id) instanceof ParameterDecl) && !(IDTable.findDeclaration(myID.id) instanceof FieldDecl)){
+                        throw new IdentificationError(vds, "reference " + myID.id.spelling + " is not a variable");
+                    }
+                }
+            }
+        }
+
         vds.varDecl.visit(this, null);
         vds.initExp.visit(this, md);
         return null;
@@ -184,6 +210,18 @@ public class Identification implements Visitor<Object,Object> {
         MethodDecl md = (MethodDecl)arg;
         as.ref.visit(this, md);
         as.val.visit(this, md);
+        if(as.val instanceof RefExpr){
+            RefExpr epx = ((RefExpr) as.val);
+            if(epx.ref instanceof IdRef){
+                IdRef iddd = ((IdRef) epx.ref);
+                if(IDTable.findDeclaration(iddd.id) != null && IDTable.findDeclaration(iddd.id) instanceof MethodDecl){
+                    throw new IdentificationError(as, "The right side of this assignment statement is an Identifier for a variable that does not exist.");
+                }
+                if(IDTable.findDeclaration(iddd.id) != null && !(IDTable.findDeclaration(iddd.id) instanceof VarDecl) && !(IDTable.findDeclaration(iddd.id) instanceof FieldDecl) && !(IDTable.findDeclaration(iddd.id) instanceof ParameterDecl)){
+                    throw new IdentificationError(as, "The right side of this assignment statment is not a field or variable");
+                }
+            }
+        }
         return null;
     }
 
@@ -285,7 +323,7 @@ public class Identification implements Visitor<Object,Object> {
             throw new IdentificationError(md, "Method declaration does not exist");
         }
 		if(md.isStatic){
-			throw new IdentificationError(md, null);
+			throw new IdentificationError(md, "method declaration is static");
         }
 		thRef.declaration = md.classContained;
 		return null;
@@ -294,6 +332,11 @@ public class Identification implements Visitor<Object,Object> {
     public Object visitIdRef(IdRef iRef, Object arg){
 		MethodDecl md = (MethodDecl)arg;
 		Declaration decl = (Declaration)iRef.id.visit(this, md);
+
+        if (!(decl instanceof VarDecl) && !(decl instanceof FieldDecl) && !(decl instanceof ParameterDecl) && !(iRef.id.spelling.equals("System")) && !(decl instanceof MethodDecl) && !(decl instanceof ClassDecl) && !(iRef.id.spelling.equals("null"))) {
+            throw new IdentificationError(iRef, "Reference " + iRef.id.spelling + " cannot be resolved to a variable");
+        }
+
 		iRef.declaration = decl;
 		return null;
 	}
@@ -303,24 +346,31 @@ public class Identification implements Visitor<Object,Object> {
 		qre.ref.visit(this, md);
 		Declaration context = qre.ref.declaration;
 		if(context == null){
-			throw new IdentificationError(context, null);
+			throw new IdentificationError(context, "qual ref context is null");
 		}
+
+        // if(IDTable.findDeclaration(qre.id) instanceof MethodDecl){
+        //     throw new IdentificationError(qre, "referencing a method decl");
+        // }
 
 		if(context instanceof ClassDecl){
 			ClassDecl cd = (ClassDecl)context;
 			MemberDecl d = (MemberDecl)cd.visit(this, qre.id);
 			
 			if(d == null){
-                throw new IdentificationError(d, null);
+                throw new IdentificationError(d, "member decl is null");
 			}
 			
 			if(md.isStatic && !d.isStatic){
-				throw new IdentificationError(d, null);
+				throw new IdentificationError(d, "method decl is static and member is not");
 			}
 			
-			if(d.isPrivate)
-				throw new IdentificationError(d, null);
-			
+			if(d.isPrivate && !(cd.name.equals(md.name))){
+                System.out.println(cd.name);
+                System.out.println(md.name);
+				throw new IdentificationError(d, "member decl is private");
+            }
+
 			qre.id.decl = d;
 			qre.declaration = qre.id.decl;
 		}else if(context instanceof LocalDecl){
@@ -333,18 +383,22 @@ public class Identification implements Visitor<Object,Object> {
 					MemberDecl d = (MemberDecl)cd.visit(this, qre.id);
 					
 					if(d == null){
-						throw new IdentificationError(d, null);
+						throw new IdentificationError(d, "THIS MEMBER DECL IS NULL");
 					}
 					
-					if(d.isPrivate){
-						throw new IdentificationError(d, null);
-                    }
+					// if(d.isPrivate){
+					// 	throw new IdentificationError(d, "THIS MEMBER DECL IS PRIVATE");
+                    // }
 					
 					qre.id.decl = d;
 					qre.declaration = qre.id.decl;
+                    // if(qre.id.decl instanceof MethodDecl){
+                    //     System.out.println(qre.id.decl.name);
+                    //     throw new IdentificationError(qre, "Cannot use this member of the class as a qualifier");
+                    // }
 					break;
 				default:
-					throw new IdentificationError(qre, null);
+					throw new IdentificationError(qre, "DEFAULTING ERROR");
 			}
 		}else if(context instanceof MemberDecl){
 			MemberDecl memd = (MemberDecl)context;
@@ -356,18 +410,19 @@ public class Identification implements Visitor<Object,Object> {
 					MemberDecl d = (MemberDecl)cd.visit(this, qre.id);
 					
 					if(d == null){
-						throw new IdentificationError(qre, null);
+						throw new IdentificationError(qre, "instance of member decl and d == null");
 					}
 					
-					if(d.isPrivate){
-						throw new IdentificationError(d, null);
-                    }
+					//if(d.isPrivate){
+                        //System.out.println(context);
+						//throw new IdentificationError(d, "instance of member decl and d is private");
+                    //}
 
 					qre.id.decl = d;
 					qre.declaration = qre.id.decl;
 					break;
 				default:
-					throw new IdentificationError(qre, null);
+					throw new IdentificationError(qre, "instance of member decl default");
 			}
 		}
 		
